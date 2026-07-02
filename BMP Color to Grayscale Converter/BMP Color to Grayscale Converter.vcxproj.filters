@@ -27,9 +27,15 @@
     <ClInclude Include="BMP Color to Grayscale Converter.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="GrayscaleConversion.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="BMP Color to Grayscale Converter.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="GrayscaleConversion.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

@@ -3,6 +3,7 @@
 
 #include "framework.h"
 #include "BMP Color to Grayscale Converter.h"
+#include "GrayscaleConversion.h"
 
 #include <windows.h>
 #include <shobjidl.h> // Required for IFileDialog
@@ -267,26 +268,71 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             break;
             case IDC_BTN_CONVERT:
             {
-                int textLength = GetWindowTextLength(hEditSource);
-
-                if (textLength > 0) {
-                    std::string strBuffer;
-                    strBuffer.resize(textLength + 1);
-                    GetWindowTextA(hEditSource, &strBuffer[0], strBuffer.size());
-                    strBuffer.resize(textLength);
-                    std::string strSourceFile(strBuffer);
-
+                int textLengthSource = GetWindowTextLength(hEditSource);
+                std::string strFullSourcePath;
+                if (textLengthSource > 0) 
+                {
+                    // Display some logging showing that the file is being processed
                     std::wstring wstrBuffer;
-                    wstrBuffer.resize(textLength + 1);
+                    wstrBuffer.resize(textLengthSource + 1);
                     GetWindowText(hEditSource, &wstrBuffer[0], wstrBuffer.size());
-                    wstrBuffer.resize(textLength);
+                    wstrBuffer.resize(textLengthSource);
                     std::wstring wstrSourceFile(wstrBuffer);
                     wstrSourceFile.insert(0, L"Converting ");
                     wstrSourceFile.append(L" to grayscale...\r\n");
                     SetWindowText(hLogStatus, wstrSourceFile.c_str());
+
+                    // Get a string for the source path
+                    std::string strSourceBuffer;
+                    strSourceBuffer.resize(textLengthSource + 1);
+                    GetWindowTextA(hEditSource, &strSourceBuffer[0], strSourceBuffer.size());
+                    strSourceBuffer.resize(textLengthSource);
+                    std::string strFullSourcePathCopy(strSourceBuffer);
+                    strFullSourcePath = strFullSourcePathCopy;
                 }
 
-               // cv::Mat img = cv::imread(lpwstrSourceFile);
+                else
+                {
+                    SetWindowText(hLogStatus, L"Source path is empty!");
+                    break;
+                }
+
+                // Get a string for the destination path 
+                int textLengthDest = GetWindowTextLength(hEditDest);
+                std::string strDestPath;
+                if (textLengthDest)
+                {
+                    std::string strDestBuffer;
+                    strDestBuffer.resize(textLengthDest + 1);
+                    GetWindowTextA(hEditDest, &strDestBuffer[0], strDestBuffer.size());
+                    strDestBuffer.resize(textLengthDest);
+                    std::string strDestPathCopy(strDestBuffer);
+                    strDestPath = strDestPathCopy;
+                }
+
+                else
+                {
+                    SetWindowText(hLogStatus, L"Destination path is empty!");
+                    break;
+                }
+
+                // Process the file
+                GrayscaleConverter fileConverter;
+                fileConverter.ReadFile(strFullSourcePath, strDestPath);
+
+                if (!fileConverter.Convert())
+                {
+                    SetWindowText(hLogStatus, L"Grayscale conversion failed...\r\nCheck the validity of the file paths.");
+                }
+                else
+                {
+                    std::string str = fileConverter.GetFullDestPath();
+                    std::wstring wstrFullDestPath(str.begin(), str.end());
+                    wstrFullDestPath.insert(0, L"Grayscale conversion succeeded!\r\nThe new file can be found at ");
+                    LPWSTR lpwstr = wstrFullDestPath.data();                        
+                    SetWindowText(hLogStatus, lpwstr);
+                }
+                break;
             }
             default:
                 return DefWindowProc(hWnd, message, wParam, lParam);
