@@ -8,6 +8,9 @@
 #include <shobjidl.h> // Required for IFileDialog
 #include <shlwapi.h>
 #include <string>
+#include <stringapiset.h>
+
+#include <opencv2/imgcodecs.hpp>
 
 #define MAX_LOADSTRING 100
 
@@ -15,6 +18,9 @@
 HINSTANCE hInst;                                // current instance
 WCHAR szTitle[MAX_LOADSTRING];                  // The title bar text
 WCHAR szWindowClass[MAX_LOADSTRING];            // the main window class name
+HWND hEditSource;
+HWND hEditDest;
+HWND hLogStatus;
 
 // Forward declarations of functions included in this code module:
 ATOM                MyRegisterClass(HINSTANCE hInstance);
@@ -106,7 +112,7 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
    hInst = hInstance; // Store instance handle in our global variable
 
    HWND hWnd = CreateWindowW(szWindowClass, szTitle, WS_OVERLAPPEDWINDOW,
-      CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, nullptr, nullptr, hInstance, nullptr);
+      CW_USEDEFAULT, 0, 700, 400, nullptr, nullptr, hInstance, nullptr);
 
    if (!hWnd)
    {
@@ -125,7 +131,7 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
        NULL
    );
 
-   HWND hEditSource = CreateWindowEx(
+   hEditSource = CreateWindowEx(
        WS_EX_CLIENTEDGE,                // Extended style: gives it a sunken 3D border
        L"EDIT",                         // Predefined system class name for edit boxes
        L"",                             // Default text content (initially empty)
@@ -161,7 +167,7 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
        NULL
    );
 
-   HWND hEditDest = CreateWindowEx(
+   hEditDest = CreateWindowEx(
        WS_EX_CLIENTEDGE,                // Extended style: gives it a sunken 3D border
        L"EDIT",                         // Predefined system class name for edit boxes
        L"",                             // Default text content (initially empty)
@@ -185,6 +191,29 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
        NULL
    );
 
+   HWND hConvertButton = CreateWindowEx(
+       0,
+       L"BUTTON",                     // Window class for text labels
+       L"Convert",           // The actual text displayed
+       WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, // Button styles
+       530, 150, 120, 25,               // X, Y position and Width, Height
+       hWnd,                    // Handle to the parent window
+       (HMENU)IDC_BTN_CONVERT,           // Unique identifier ID
+       hInstance,
+       NULL
+   );
+
+   hLogStatus = CreateWindowEx(
+       0,
+       L"STATIC",     // Window class for text labels
+       L"",           // The actual text displayed
+       WS_CHILD | WS_VISIBLE | SS_LEFT,
+       20, 150, 500, 200,               // X, Y position and Width, Height
+       hWnd,                    // Handle to the parent window
+       (HMENU)IDC_TEXT_STATUS,           // Unique identifier ID
+       hInstance,
+       NULL
+   );
 
    ShowWindow(hWnd, nCmdShow);
    UpdateWindow(hWnd);
@@ -236,6 +265,29 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                 }
             }
             break;
+            case IDC_BTN_CONVERT:
+            {
+                int textLength = GetWindowTextLength(hEditSource);
+
+                if (textLength > 0) {
+                    std::string strBuffer;
+                    strBuffer.resize(textLength + 1);
+                    GetWindowTextA(hEditSource, &strBuffer[0], strBuffer.size());
+                    strBuffer.resize(textLength);
+                    std::string strSourceFile(strBuffer);
+
+                    std::wstring wstrBuffer;
+                    wstrBuffer.resize(textLength + 1);
+                    GetWindowText(hEditSource, &wstrBuffer[0], wstrBuffer.size());
+                    wstrBuffer.resize(textLength);
+                    std::wstring wstrSourceFile(wstrBuffer);
+                    wstrSourceFile.insert(0, L"Converting ");
+                    wstrSourceFile.append(L" to grayscale...\r\n");
+                    SetWindowText(hLogStatus, wstrSourceFile.c_str());
+                }
+
+               // cv::Mat img = cv::imread(lpwstrSourceFile);
+            }
             default:
                 return DefWindowProc(hWnd, message, wParam, lParam);
             }
