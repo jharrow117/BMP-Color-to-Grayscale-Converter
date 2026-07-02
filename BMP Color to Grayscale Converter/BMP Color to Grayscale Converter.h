@@ -1,0 +1,11 @@
+#pragma once
+
+#include "Resource.h"
+
+#define IDC_SOURCE_FILE_EDITBOX 100
+#define IDC_SOURCE_LABEL		101
+#define IDC_BTN_SOURCE_BROWSE	102
+
+#define IDC_DEST_FILE_EDITBOX	200
+#define IDC_DEST_LABEL			201
+#define IDC_BTN_DEST_BROWSE		202
