@@ -207,7 +207,7 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
    HWND hConvertWithOpenCVButton = CreateWindowEx(
        0,
        L"BUTTON",                     // Window class for text labels
-       L"Convert W/ OpenCV",
+       L"Convert w/ OpenCV",
        WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, // Button styles
        830, 200, 150, 25,               // X, Y position and Width, Height
        hWnd,                    // Handle to the parent window
@@ -262,10 +262,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                 break;
             case IDC_BTN_SOURCE_BROWSE: // User clicked Source Browse button
             {
-                // TODO: only allow bmp files to be selected
                 std::wstring srcFile = BrowseFolderOrFile(hWnd, false);
                 if (!srcFile.empty()) {
-                    // Set the text of your Source Edit Box
                     SetDlgItemText(hWnd, IDC_SOURCE_FILE_EDITBOX, srcFile.c_str());
                 }
             }
@@ -274,7 +272,6 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             {
                 std::wstring destFolder = BrowseFolderOrFile(hWnd, true);
                 if (!destFolder.empty()) {
-                    // Set the text of your Destination Edit Box
                     SetDlgItemText(hWnd, IDC_DEST_FILE_EDITBOX, destFolder.c_str());
                 }
             }
@@ -402,7 +399,8 @@ INT_PTR CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 }
 
 // Helper function to launch the Windows Folder Browse dialog
-std::wstring BrowseFolderOrFile(HWND hwndOwner, bool bFolderOnly) {
+std::wstring BrowseFolderOrFile(HWND hwndOwner, bool bFolderOnly) 
+{
     std::wstring selectedPath = L"";
 
     IFileOpenDialog* pFileOpen;
@@ -416,8 +414,16 @@ std::wstring BrowseFolderOrFile(HWND hwndOwner, bool bFolderOnly) {
             if (bFolderOnly)
                 pFileOpen->SetOptions(fos | FOS_PICKFOLDERS);
             else
-                pFileOpen->SetOptions(fos | FOS_FILEMUSTEXIST);
+                pFileOpen->SetOptions(fos | FOS_FILEMUSTEXIST | FOS_STRICTFILETYPES);
         }
+
+        // Used if selecting a file
+        COMDLG_FILTERSPEC fileTypes[] = {
+           { L"Bitmap Image", L"*.bmp" }
+        };
+
+        if (!bFolderOnly)
+            pFileOpen->SetFileTypes(ARRAYSIZE(fileTypes), fileTypes);
 
         // Show the Open dialog box
         hr = pFileOpen->Show(hwndOwner);

@@ -13,7 +13,7 @@ bool GrayscaleConverter::ReadFile(std::string fullSourcePath, std::string destPa
 	strDestFileName.insert(strDestFileName.find("."), "_Grayscale");
 	strFullDestPath = strDestPath;
 	strFullDestPath.append(strDestFileName);
-	bmp = cv::imread(strFullSourcePath, cv::COLOR_RGB2BGR);
+	bmp = cv::imread(strFullSourcePath);
 
 	if (bmp.empty())
 		return false;
