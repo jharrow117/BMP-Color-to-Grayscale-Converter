@@ -10,7 +10,7 @@ Luminosity method without gamma correction
 class GrayscaleConverter
 {
 public:
-	GrayscaleConverter();
+	GrayscaleConverter() = default;
 	~GrayscaleConverter() = default;
 
 	bool ReadFile(std::string fullSourcePath, std::string destPath);

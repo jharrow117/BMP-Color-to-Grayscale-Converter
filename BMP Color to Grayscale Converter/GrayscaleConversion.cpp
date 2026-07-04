@@ -4,11 +4,6 @@
 #include <opencv2/opencv.hpp>
 #include <Windows.h>
 
-GrayscaleConverter::GrayscaleConverter()
-{
-
-}
-
 bool GrayscaleConverter::ReadFile(std::string fullSourcePath, std::string destPath)
 {
 	strFullSourcePath = fullSourcePath;
@@ -19,11 +14,16 @@ bool GrayscaleConverter::ReadFile(std::string fullSourcePath, std::string destPa
 	strFullDestPath = strDestPath;
 	strFullDestPath.append(strDestFileName);
 	bmp = cv::imread(strFullSourcePath, cv::COLOR_RGB2BGR);
-	return false;
+
+	if (bmp.empty())
+		return false;
+	else
+		return true;
 }
 
 bool GrayscaleConverter::ConvertToGrayscale()
 {
+	// Sanity check
 	if (bmp.empty())
 		return false;
 

@@ -10,8 +10,7 @@
 #include <shlwapi.h>
 #include <string>
 #include <stringapiset.h>
-#include <chrono>
-
+#include <shellapi.h>
 #include <opencv2/imgcodecs.hpp>
 
 #define MAX_LOADSTRING 100
@@ -114,7 +113,7 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
    hInst = hInstance; // Store instance handle in our global variable
 
    HWND hWnd = CreateWindowW(szWindowClass, szTitle, WS_OVERLAPPEDWINDOW,
-      CW_USEDEFAULT, 0, 800, 400, nullptr, nullptr, hInstance, nullptr);
+      CW_USEDEFAULT, 0, 1000, 500, nullptr, nullptr, hInstance, nullptr);
 
    if (!hWnd)
    {
@@ -138,7 +137,7 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
        L"EDIT",                         // Window class for edit boxes
        L"",
        WS_CHILD | WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL, // Window & Edit styles
-       20, 50, 500, 25,                 // X, Y positions and Width, Height (pixels)
+       20, 50, 800, 25,                 // X, Y positions and Width, Height (pixels)
        hWnd,                            // Parent window handle
        (HMENU)IDC_SOURCE_FILE_EDITBOX,  // Unique child window identifier (ID)
        (HINSTANCE)GetWindowLongPtr(hWnd, GWLP_HINSTANCE),
@@ -150,7 +149,7 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
        L"BUTTON",                                               // Window class for buttons
        L"Browse...",
        WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,   // Button styles
-       530, 50, 120, 25,                                        // X, Y position and Width, Height
+       830, 50, 120, 25,                                        // X, Y position and Width, Height
        hWnd,                                                    // Handle to the parent window
        (HMENU)IDC_BTN_SOURCE_BROWSE,                            // Unique identifier ID
        hInstance,
@@ -174,7 +173,7 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
        L"EDIT",                         // Window class for edit boxes
        L"",
        WS_CHILD | WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL, // Window & Edit styles
-       20, 100, 500, 25,                // X, Y positions and Width, Height (pixels)
+       20, 100, 800, 25,                // X, Y positions and Width, Height (pixels)
        hWnd,                            // Parent window handle
        (HMENU)IDC_DEST_FILE_EDITBOX,    // Unique identifier ID
        (HINSTANCE)GetWindowLongPtr(hWnd, GWLP_HINSTANCE),
@@ -186,7 +185,7 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
        L"BUTTON",                     // Window class for text labels
        L"Browse...",           // The actual text displayed
        WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, // Button styles
-       530, 100, 120, 25,               // X, Y position and Width, Height
+       830, 100, 120, 25,               // X, Y position and Width, Height
        hWnd,                    // Handle to the parent window
        (HMENU)IDC_BTN_DEST_BROWSE,           // Unique identifier ID
        hInstance,
@@ -198,7 +197,7 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
        L"BUTTON",                     // Window class for text labels
        L"Convert",           // The actual text displayed
        WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, // Button styles
-       530, 150, 120, 25,               // X, Y position and Width, Height
+       830, 150, 120, 25,               // X, Y position and Width, Height
        hWnd,                    // Handle to the parent window
        (HMENU)IDC_BTN_CONVERT,           // Unique identifier ID
        hInstance,
@@ -210,7 +209,7 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
        L"EDIT",     // Window class for edit boxes
        L"",
        WS_CHILD | WS_VISIBLE | SS_LEFT | ES_MULTILINE | ES_READONLY,
-       20, 150, 500, 150,               // X, Y position and Width, Height
+       20, 150, 800, 200,               // X, Y position and Width, Height
        hWnd,                    // Handle to the parent window
        (HMENU)IDC_TEXT_STATUS,           // Unique identifier ID
        hInstance,
@@ -320,19 +319,30 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
                 // Process the file
                 GrayscaleConverter fileConverter;
-                fileConverter.ReadFile(strFullSourcePath, strDestPath);
+                if (!fileConverter.ReadFile(strFullSourcePath, strDestPath))
+                {
+                    SetWindowText(hLogStatus, L"Could not read the file or the file was empty.");
+                }
 
                 if (!fileConverter.ConvertToGrayscale())
                 {
-                    SetWindowText(hLogStatus, L"Grayscale conversion failed...\r\nCheck the validity of the file paths.");
+                    SetWindowText(hLogStatus, L"Grayscale conversion failed... Check the validity of the source file.");
                 }
                 else
                 {
                     std::string str = fileConverter.GetFullDestPath();
                     std::wstring wstrFullDestPath(str.begin(), str.end());
-                    wstrFullDestPath.insert(0, L"Grayscale conversion succeeded in " + fileConverter.GetTimeElapsedWString_ms() + L"ms!\r\nThe new file can be found at ");
-                    LPWSTR lpwstr = wstrFullDestPath.data();                        
-                    SetWindowText(hLogStatus, lpwstr);
+
+                    std::wstring wstrLogging = wstrFullDestPath;
+                    wstrLogging.insert(0, L"Grayscale conversion succeeded in " + fileConverter.GetTimeElapsedWString_ms() + L"ms!\r\nThe new file can be found at ");
+                    LPWSTR lpwstrFullDestPath = wstrLogging.data();
+                    SetWindowText(hLogStatus, lpwstrFullDestPath);
+
+                    // Open file explorer and highlight the converted bmp file
+                    std::wstring wstrFileExplorer = L"/select,\"" + wstrFullDestPath + L"\"";
+                    LPCWSTR parameters = wstrFileExplorer.data();
+                    ShellExecute(NULL, L"open", L"explorer.exe", parameters, NULL, SW_SHOWNORMAL);
+
                 }
                 break;
             }
