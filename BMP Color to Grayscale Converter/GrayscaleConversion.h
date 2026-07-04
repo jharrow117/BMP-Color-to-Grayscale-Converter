@@ -14,8 +14,9 @@ public:
 	~GrayscaleConverter() = default;
 
 	bool ReadFile(std::string fullSourcePath, std::string destPath);
-	bool Convert();
+	bool ConvertToGrayscale();
 	std::string GetFullDestPath() const { return strFullDestPath; }
+	std::wstring GetTimeElapsedWString_ms() const { return wstrConversionTime_ms; }
 
 protected:
 	std::string strFullSourcePath;
@@ -25,5 +26,7 @@ protected:
 	std::string strFullDestPath;
 	cv::Mat bmp;
 
-	void ProcessPixelWithLuminosityMethod(cv::Vec3b &bgrPixel);
+	std::wstring wstrConversionTime_ms;
+
+	void ProcessPixelWithLuminosityMethod(Pixel &bgrPixel);
 };

@@ -10,6 +10,7 @@
 #include <shlwapi.h>
 #include <string>
 #include <stringapiset.h>
+#include <chrono>
 
 #include <opencv2/imgcodecs.hpp>
 
@@ -113,7 +114,7 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
    hInst = hInstance; // Store instance handle in our global variable
 
    HWND hWnd = CreateWindowW(szWindowClass, szTitle, WS_OVERLAPPEDWINDOW,
-      CW_USEDEFAULT, 0, 700, 400, nullptr, nullptr, hInstance, nullptr);
+      CW_USEDEFAULT, 0, 800, 400, nullptr, nullptr, hInstance, nullptr);
 
    if (!hWnd)
    {
@@ -122,47 +123,47 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 
    HWND hSourceLabel = CreateWindowEx(
        0,
-       L"STATIC",                     // Window class for text labels
-       L"Source BMP file:",           // The actual text displayed
+       L"STATIC",                       // Window class for text labels
+       L"Source BMP file:",
        WS_CHILD | WS_VISIBLE | SS_LEFT,
-       20, 20, 120, 20,               // X, Y position and Width, Height
-       hWnd,                    // Handle to the parent window
-       (HMENU)IDC_SOURCE_LABEL,           // Unique identifier ID
+       20, 20, 120, 20,                 // X, Y position and Width, Height
+       hWnd,                            // Handle to the parent window
+       (HMENU)IDC_SOURCE_LABEL,         // Unique identifier ID
        hInstance,
        NULL
    );
 
    hEditSource = CreateWindowEx(
        WS_EX_CLIENTEDGE,                // Extended style: gives it a sunken 3D border
-       L"EDIT",                         // Predefined system class name for edit boxes
-       L"",                             // Default text content (initially empty)
+       L"EDIT",                         // Window class for edit boxes
+       L"",
        WS_CHILD | WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL, // Window & Edit styles
        20, 50, 500, 25,                 // X, Y positions and Width, Height (pixels)
        hWnd,                            // Parent window handle
-       (HMENU)IDC_SOURCE_FILE_EDITBOX,           // Unique child window identifier (ID)
+       (HMENU)IDC_SOURCE_FILE_EDITBOX,  // Unique child window identifier (ID)
        (HINSTANCE)GetWindowLongPtr(hWnd, GWLP_HINSTANCE),
        NULL
    );
 
    HWND hSourceButton = CreateWindowEx(
        0,
-       L"BUTTON",                     // Window class for text labels
-       L"Browse...",           // The actual text displayed
-       WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, // Button styles
-       530, 50, 120, 25,               // X, Y position and Width, Height
-       hWnd,                    // Handle to the parent window
-       (HMENU)IDC_BTN_SOURCE_BROWSE,           // Unique identifier ID
+       L"BUTTON",                                               // Window class for buttons
+       L"Browse...",
+       WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,   // Button styles
+       530, 50, 120, 25,                                        // X, Y position and Width, Height
+       hWnd,                                                    // Handle to the parent window
+       (HMENU)IDC_BTN_SOURCE_BROWSE,                            // Unique identifier ID
        hInstance,
        NULL
    );
 
    HWND hDestLabel = CreateWindowEx(
        0,
-       L"STATIC",                     // Window class for text labels
-       L"Destination Folder:",           // The actual text displayed
+       L"STATIC",                       // Window class for static text
+       L"Destination Folder:",
        WS_CHILD | WS_VISIBLE | SS_LEFT,
-       20, 80, 130, 25,               // X, Y position and Width, Height
-       hWnd,                    // Handle to the parent window
+       20, 80, 130, 25,                 // X, Y position and Width, Height
+       hWnd,                            // Handle to the parent window
        (HMENU)IDC_DEST_LABEL,           // Unique identifier ID
        hInstance,
        NULL
@@ -170,12 +171,12 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 
    hEditDest = CreateWindowEx(
        WS_EX_CLIENTEDGE,                // Extended style: gives it a sunken 3D border
-       L"EDIT",                         // Predefined system class name for edit boxes
-       L"",                             // Default text content (initially empty)
+       L"EDIT",                         // Window class for edit boxes
+       L"",
        WS_CHILD | WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL, // Window & Edit styles
-       20, 100, 500, 25,                 // X, Y positions and Width, Height (pixels)
+       20, 100, 500, 25,                // X, Y positions and Width, Height (pixels)
        hWnd,                            // Parent window handle
-       (HMENU)IDC_DEST_FILE_EDITBOX,           // Unique child window identifier (ID)
+       (HMENU)IDC_DEST_FILE_EDITBOX,    // Unique identifier ID
        (HINSTANCE)GetWindowLongPtr(hWnd, GWLP_HINSTANCE),
        NULL
    );
@@ -206,10 +207,10 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 
    hLogStatus = CreateWindowEx(
        0,
-       L"STATIC",     // Window class for text labels
-       L"",           // The actual text displayed
-       WS_CHILD | WS_VISIBLE | SS_LEFT,
-       20, 150, 500, 200,               // X, Y position and Width, Height
+       L"EDIT",     // Window class for edit boxes
+       L"",
+       WS_CHILD | WS_VISIBLE | SS_LEFT | ES_MULTILINE | ES_READONLY,
+       20, 150, 500, 150,               // X, Y position and Width, Height
        hWnd,                    // Handle to the parent window
        (HMENU)IDC_TEXT_STATUS,           // Unique identifier ID
        hInstance,
@@ -250,6 +251,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                 break;
             case IDC_BTN_SOURCE_BROWSE: // User clicked Source Browse button
             {
+                // TODO: only allow bmp files to be selected
                 std::wstring srcFile = BrowseFolderOrFile(hWnd, false);
                 if (!srcFile.empty()) {
                     // Set the text of your Source Edit Box
@@ -320,7 +322,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                 GrayscaleConverter fileConverter;
                 fileConverter.ReadFile(strFullSourcePath, strDestPath);
 
-                if (!fileConverter.Convert())
+                if (!fileConverter.ConvertToGrayscale())
                 {
                     SetWindowText(hLogStatus, L"Grayscale conversion failed...\r\nCheck the validity of the file paths.");
                 }
@@ -328,7 +330,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                 {
                     std::string str = fileConverter.GetFullDestPath();
                     std::wstring wstrFullDestPath(str.begin(), str.end());
-                    wstrFullDestPath.insert(0, L"Grayscale conversion succeeded!\r\nThe new file can be found at ");
+                    wstrFullDestPath.insert(0, L"Grayscale conversion succeeded in " + fileConverter.GetTimeElapsedWString_ms() + L"ms!\r\nThe new file can be found at ");
                     LPWSTR lpwstr = wstrFullDestPath.data();                        
                     SetWindowText(hLogStatus, lpwstr);
                 }
