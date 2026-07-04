@@ -125,7 +125,7 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
        L"STATIC",                       // Window class for text labels
        L"Source BMP file:",
        WS_CHILD | WS_VISIBLE | SS_LEFT,
-       20, 20, 120, 20,                 // X, Y position and Width, Height
+       20, 30, 120, 20,                 // X, Y position and Width, Height
        hWnd,                            // Handle to the parent window
        (HMENU)IDC_SOURCE_LABEL,         // Unique identifier ID
        hInstance,
@@ -149,7 +149,7 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
        L"BUTTON",                                               // Window class for buttons
        L"Browse...",
        WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,   // Button styles
-       830, 50, 120, 25,                                        // X, Y position and Width, Height
+       830, 50, 150, 25,                                        // X, Y position and Width, Height
        hWnd,                                                    // Handle to the parent window
        (HMENU)IDC_BTN_SOURCE_BROWSE,                            // Unique identifier ID
        hInstance,
@@ -185,7 +185,7 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
        L"BUTTON",                     // Window class for text labels
        L"Browse...",           // The actual text displayed
        WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, // Button styles
-       830, 100, 120, 25,               // X, Y position and Width, Height
+       830, 100, 150, 25,               // X, Y position and Width, Height
        hWnd,                    // Handle to the parent window
        (HMENU)IDC_BTN_DEST_BROWSE,           // Unique identifier ID
        hInstance,
@@ -195,11 +195,23 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
    HWND hConvertButton = CreateWindowEx(
        0,
        L"BUTTON",                     // Window class for text labels
-       L"Convert",           // The actual text displayed
+       L"Convert",
        WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, // Button styles
-       830, 150, 120, 25,               // X, Y position and Width, Height
+       830, 150, 150, 25,               // X, Y position and Width, Height
        hWnd,                    // Handle to the parent window
        (HMENU)IDC_BTN_CONVERT,           // Unique identifier ID
+       hInstance,
+       NULL
+   );
+
+   HWND hConvertWithOpenCVButton = CreateWindowEx(
+       0,
+       L"BUTTON",                     // Window class for text labels
+       L"Convert W/ OpenCV",
+       WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, // Button styles
+       830, 200, 150, 25,               // X, Y position and Width, Height
+       hWnd,                    // Handle to the parent window
+       (HMENU)IDC_BTN_CONVERT_WITH_OPENCV,           // Unique identifier ID
        hInstance,
        NULL
    );
@@ -268,6 +280,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             }
             break;
             case IDC_BTN_CONVERT:
+            case IDC_BTN_CONVERT_WITH_OPENCV:
             {
                 int textLengthSource = GetWindowTextLength(hEditSource);
                 std::string strFullSourcePath;
@@ -324,7 +337,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                     SetWindowText(hLogStatus, L"Could not read the file or the file was empty.");
                 }
 
-                if (!fileConverter.ConvertToGrayscale())
+                if (!fileConverter.ConvertToGrayscale(wmId == IDC_BTN_CONVERT_WITH_OPENCV))
                 {
                     SetWindowText(hLogStatus, L"Grayscale conversion failed... Check the validity of the source file.");
                 }
@@ -338,7 +351,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                     LPWSTR lpwstrFullDestPath = wstrLogging.data();
                     SetWindowText(hLogStatus, lpwstrFullDestPath);
 
-                    // Open file explorer and highlight the converted bmp file
+                    // Open file explorer to the destination path and highlight the converted bmp file
                     std::wstring wstrFileExplorer = L"/select,\"" + wstrFullDestPath + L"\"";
                     LPCWSTR parameters = wstrFileExplorer.data();
                     ShellExecute(NULL, L"open", L"explorer.exe", parameters, NULL, SW_SHOWNORMAL);

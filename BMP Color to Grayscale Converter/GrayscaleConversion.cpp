@@ -21,7 +21,7 @@ bool GrayscaleConverter::ReadFile(std::string fullSourcePath, std::string destPa
 		return true;
 }
 
-bool GrayscaleConverter::ConvertToGrayscale()
+bool GrayscaleConverter::ConvertToGrayscale(bool bUseOpenCV)
 {
 	// Sanity check
 	if (bmp.empty())
@@ -32,21 +32,31 @@ bool GrayscaleConverter::ConvertToGrayscale()
 
 	GetSystemTime(&st);
 
-	Pixel* pPixel = bmp.ptr<Pixel>(0,0);
-
-	const Pixel* pEndPixel = bmp.ptr<Pixel>(bmp.rows-1, bmp.cols-1);
-
-	while (pPixel != pEndPixel)
+	if (bUseOpenCV)
 	{
-		ProcessPixelWithLuminosityMethod(*pPixel);
-		pPixel++;
+		cv::Mat newBmp;
+		cv::cvtColor(bmp, newBmp, cv::COLOR_BGR2GRAY);
+		cv::imwrite(strFullDestPath, newBmp);
 	}
+
+	else
+	{
+		Pixel* pPixel = bmp.ptr<Pixel>(0, 0);
+
+		const Pixel* pEndPixel = bmp.ptr<Pixel>(bmp.rows - 1, bmp.cols - 1);
+
+		while (pPixel != pEndPixel)
+		{
+			ProcessPixelWithLuminosityMethod(*pPixel);
+			pPixel++;
+		}
+
+		cv::imwrite(strFullDestPath, bmp);
+	}	
 
 	GetSystemTime(&st2);
 
 	wstrConversionTime_ms = std::to_wstring(st2.wMilliseconds - st.wMilliseconds);
-
-	cv::imwrite(strFullDestPath, bmp);
 
 	return true;
 }

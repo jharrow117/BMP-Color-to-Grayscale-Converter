@@ -14,7 +14,7 @@ public:
 	~GrayscaleConverter() = default;
 
 	bool ReadFile(std::string fullSourcePath, std::string destPath);
-	bool ConvertToGrayscale();
+	bool ConvertToGrayscale(bool bUseOpenCV = false);
 	std::string GetFullDestPath() const { return strFullDestPath; }
 	std::wstring GetTimeElapsedWString_ms() const { return wstrConversionTime_ms; }
 
